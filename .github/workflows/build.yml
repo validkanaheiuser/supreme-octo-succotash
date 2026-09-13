@@ -53,6 +53,10 @@ jobs:
           git sparse-checkout set iPhoneOS16.5.sdk
           cp -r iPhoneOS16.5.sdk $THEOS/sdks/
 
+      # ── Build dependencies ────────────────────────────────────────────────
+      - name: Install ldid
+        run: brew install ldid
+
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build package
         run: |
