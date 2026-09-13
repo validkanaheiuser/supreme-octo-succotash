@@ -24,7 +24,7 @@ jobs:
         run: |
           echo "=== Project root ===" && ls -la
           echo "=== Resources/ ===" && ls -la Resources/ 2>/dev/null || echo "(missing)"
-          echo "=== layout/ ===" && find layout/ 2>/dev/null || echo "(missing)"
+          echo "=== layout/ (recursive) ===" && find layout/ -type f 2>/dev/null || echo "(missing)"
 
       # ── Cache Theos core (makefiles, vendor, templates) ──────────────────
       - name: Cache Theos
@@ -63,6 +63,15 @@ jobs:
       # ── Build dependencies ────────────────────────────────────────────────
       - name: Install ldid
         run: brew install ldid
+
+      # ── Debug: show how this Theos version finds filter plist ─────────────
+      - name: Debug Theos filter plist logic
+        run: |
+          echo "=== Theos tweak.mk filter plist check ==="
+          grep -n -i "filter_plist\|FILTER_PLIST\|missing.*filter\|Filter\.plist" \
+            $THEOS/makefiles/tweak.mk 2>/dev/null || echo "(nothing matched)"
+          echo "=== THEOS_PACKAGE_INSTALL_PREFIX ==="
+          grep -r "THEOS_PACKAGE_INSTALL_PREFIX" $THEOS/makefiles/ | head -10
 
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build package
