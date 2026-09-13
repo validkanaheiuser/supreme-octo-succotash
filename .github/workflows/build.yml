@@ -7,6 +7,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  THEOS: ${{ github.workspace }}/_theos
+
 jobs:
   build:
     name: Build .deb (iphoneos-arm64e)
@@ -16,21 +19,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # theos-action sets up Theos + iOS SDK automatically.
-      # It exports $THEOS and caches both the Theos install and the SDK.
-      - name: Setup Theos
-        uses: theos/theos-action@v2
+      # ── Cache Theos core (makefiles, vendor, templates) ──────────────────
+      - name: Cache Theos
+        id: theos-cache
+        uses: actions/cache@v4
         with:
-          # Pull iOS 16.5 SDK from the theos/sdks repo
-          theos-sdks-path: ${{ github.workspace }}/theos/sdks
-          cache-key: ${{ runner.os }}-theos-${{ hashFiles('Makefile') }}
+          path: ${{ github.workspace }}/_theos
+          key: theos-${{ runner.os }}-v1
 
+      - name: Install Theos
+        if: steps.theos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+
+      # ── Cache iOS 16.5 SDK separately so SDK updates don't bust Theos ────
+      - name: Cache iOS 16.5 SDK
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/_theos/sdks/iPhoneOS16.5.sdk
+          key: sdk-iphoneos-16.5-v1
+
+      - name: Download iOS 16.5 SDK
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          # Sparse-checkout only the needed SDK directory (~200 MB vs 2 GB full clone)
+          git clone \
+            --depth 1 \
+            --filter=blob:none \
+            --sparse \
+            https://github.com/theos/sdks.git /tmp/theos-sdks
+          cd /tmp/theos-sdks
+          git sparse-checkout set iPhoneOS16.5.sdk
+          cp -r iPhoneOS16.5.sdk $THEOS/sdks/
+
+      # ── Build ─────────────────────────────────────────────────────────────
       - name: Build package
         run: |
           make package \
             FINALPACKAGE=1 \
             THEOS_PACKAGE_SCHEME=rootless \
-            ARCHS=arm64e 2>&1
+            ARCHS=arm64e
 
       - name: Show produced .deb
         run: ls -lah packages/
