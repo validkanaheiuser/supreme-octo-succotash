@@ -1,0 +1,9 @@
+Package: com.validk.touchgeofix
+Name: TouchGeoFix
+Version: 1.0.0
+Architecture: iphoneos-arm64e
+Description: Patches synthetic HID touch geometry for iOSAutomate (security research)
+Maintainer: validkanaheiuser
+Author: validkanaheiuser
+Section: Tweaks
+Depends: ellekit, mobilesubstrate | libhooker | substitute

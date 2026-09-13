@@ -1,0 +1,43 @@
+name: Build TouchGeoFix (arm64e)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build .deb (iphoneos-arm64e)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # theos-action sets up Theos + iOS SDK automatically.
+      # It exports $THEOS and caches both the Theos install and the SDK.
+      - name: Setup Theos
+        uses: theos/theos-action@v2
+        with:
+          # Pull iOS 16.5 SDK from the theos/sdks repo
+          theos-sdks-path: ${{ github.workspace }}/theos/sdks
+          cache-key: ${{ runner.os }}-theos-${{ hashFiles('Makefile') }}
+
+      - name: Build package
+        run: |
+          make package \
+            FINALPACKAGE=1 \
+            THEOS_PACKAGE_SCHEME=rootless \
+            ARCHS=arm64e 2>&1
+
+      - name: Show produced .deb
+        run: ls -lah packages/
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TouchGeoFix-arm64e-${{ github.sha }}
+          path: packages/*.deb
+          retention-days: 30
