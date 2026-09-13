@@ -9,5 +9,6 @@ TWEAK_NAME = TouchGeoFix
 TouchGeoFix_FILES = Tweak.x
 TouchGeoFix_CFLAGS = -fobjc-arc -Wno-unused-variable
 TouchGeoFix_LDFLAGS = -lsubstrate
+TouchGeoFix_RESOURCE_DIRS = Resources
 
 include $(THEOS_MAKE_PATH)/tweak.mk
