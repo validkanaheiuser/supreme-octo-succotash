@@ -64,14 +64,17 @@ jobs:
       - name: Install ldid
         run: brew install ldid
 
-      # ── Debug: show how this Theos version finds filter plist ─────────────
+      # ── Debug: find exactly where Theos checks for filter plist ──────────
       - name: Debug Theos filter plist logic
         run: |
-          echo "=== Theos tweak.mk filter plist check ==="
-          grep -n -i "filter_plist\|FILTER_PLIST\|missing.*filter\|Filter\.plist" \
-            $THEOS/makefiles/tweak.mk 2>/dev/null || echo "(nothing matched)"
-          echo "=== THEOS_PACKAGE_INSTALL_PREFIX ==="
-          grep -r "THEOS_PACKAGE_INSTALL_PREFIX" $THEOS/makefiles/ | head -10
+          echo "=== Makefile dir structure ==="
+          ls $THEOS/makefiles/
+          echo "=== Searching all makefiles for filter plist error ==="
+          grep -rn "missing a filter\|FILTER_PLIST\|filter_plist\|Filter\.plist" \
+            $THEOS/makefiles/ 2>/dev/null || echo "(nothing matched anywhere)"
+          echo "=== THEOS_PACKAGE_INSTALL_PREFIX value ==="
+          make -f $THEOS/makefiles/package.mk print-THEOS_PACKAGE_INSTALL_PREFIX \
+            THEOS_PACKAGE_SCHEME=rootless 2>/dev/null || true
 
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build package
