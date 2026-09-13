@@ -19,13 +19,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ── Debug: verify repo files reached the runner ───────────────────────
+      - name: Debug file structure
+        run: |
+          echo "=== Project root ===" && ls -la
+          echo "=== Resources/ ===" && ls -la Resources/ 2>/dev/null || echo "(missing)"
+          echo "=== layout/ ===" && find layout/ 2>/dev/null || echo "(missing)"
+
       # ── Cache Theos core (makefiles, vendor, templates) ──────────────────
       - name: Cache Theos
         id: theos-cache
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/_theos
-          key: theos-${{ runner.os }}-v1
+          key: theos-${{ runner.os }}-v2
 
       - name: Install Theos
         if: steps.theos-cache.outputs.cache-hit != 'true'
@@ -38,7 +45,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/_theos/sdks/iPhoneOS16.5.sdk
-          key: sdk-iphoneos-16.5-v1
+          key: sdk-iphoneos-16.5-v2
 
       - name: Download iOS 16.5 SDK
         if: steps.sdk-cache.outputs.cache-hit != 'true'
